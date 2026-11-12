@@ -56,12 +56,12 @@ class Searcher:
         max_chunk_size (int): See above.
         reranker (AutoModelForSequenceClassification): See above.
         input_tokens (BatchEncoding): The entire tokenized input_text.
-        token_char_bounds (torch.Tensor): A list of beginning and ending char indices for each token, end exclusive.
+        tokens_char_bounds (torch.Tensor): A list of beginning and ending char indices for each token, end exclusive.
         chunks: (List[Chunk]): A list of chunks derived from the input_text.
     """
 
     def __init__(self, input_text, nlp, tokenizer, model, max_chunk_size, reranker, window_offset=0):
-        self.input_text = input_text
+        self.input_text = input_text.strip()
         self.tokenizer = tokenizer
         self.model = model
         self.max_chunk_size = max_chunk_size
