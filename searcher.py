@@ -171,7 +171,9 @@ class Searcher:
                 window_start = 0
             else:
                 # Leftmost token position of starting chunk
-                window_start = self.chunks[chunk_index - window_chunk_offset].token_bounds[0]
+                window_start = self.chunks[
+                    max(chunk_index - window_chunk_offset, 0)
+                ].token_bounds[0]
 
             # Determine rightmost token position of current window
             if chunk_index == len(self.chunks) - 1:
@@ -179,7 +181,9 @@ class Searcher:
                 window_end = chunk.token_bounds[1] + 1
             else:
                 # Rightmost token position of ending chunk, +1
-                window_end = self.chunks[chunk_index + window_chunk_offset].token_bounds[1]
+                window_end = self.chunks[
+                    min(chunk_index + window_chunk_offset, len(self.chunks) - 1)
+                ].token_bounds[1]
 
             # If window exceeds maximum size, truncate to maximum size without sliding
             if window_end - window_start > self.max_chunk_size:
