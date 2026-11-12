@@ -10,8 +10,8 @@ Utility class for storing information about a chunk.
 
 Attributes:
     text (str): The text captured in the chunk.
-    char_bounds (tuple): The beginning and ending char indices of the text, inclusive.
-    token_bounds (tuple): The beginning and ending token indices of the text, inclusive.
+    char_bounds (tuple): The beginning and ending char indices of the text, end exclusive.
+    token_bounds (tuple): The beginning and ending token indices of the text, end exclusive.
     tokens (BatchEncoding): The tokenized chunk text.
     embedding (np.ndarray): The text's sentence embedding.
 """
@@ -56,7 +56,7 @@ class Searcher:
         max_chunk_size (int): See above.
         reranker (AutoModelForSequenceClassification): See above.
         input_tokens (BatchEncoding): The entire tokenized input_text.
-        token_char_bounds (torch.Tensor): The 
+        token_char_bounds (torch.Tensor): A list of beginning and ending char indices for each token, end exclusive.
         chunks: (List[Chunk]): A list of chunks derived from the input_text.
     """
 
@@ -128,7 +128,7 @@ class Searcher:
                     self.chunks.append(Chunk(
                         text=sent.text,
                         char_bounds=(sent_start, sent_end),
-                        token_bounds=(starting_token_pos, ending_token_pos)
+                        token_bounds=(starting_token_pos, ending_token_pos + 1)
                     ))
 
     """
@@ -143,17 +143,17 @@ class Searcher:
             chunk.embedding = embeddings[i]
 
             # Store non-chunk [CLS] starting token if first chunk, else normal
-            left_token_idx = 0 if i == 0 else chunk.token_bounds[0]
+            token_idx_start = 0 if i == 0 else chunk.token_bounds[0]
 
-            right_token_idx = min(
+            token_idx_end = min(
                 # Store non-chunk [SEP] ending token if last chunk, else normal
                 chunk.token_bounds[1] + (i == len(self.chunks) - 1),
                 # Clamp right_token_idx to maximum allowed size
-                left_token_idx + self.max_chunk_size - 1
+                token_idx_start + self.max_chunk_size
             )
 
             batch = {
-                k: v[:, left_token_idx:right_token_idx + 1]
+                k: v[:, token_idx_start:token_idx_end]
                 for k, v in self.input_tokens.items()
             }
             chunk.tokens = batch['input_ids']
@@ -176,16 +176,16 @@ class Searcher:
             # Determine rightmost token position of current window
             if chunk_index == len(self.chunks) - 1:
                 # Grab the ending token [SEP], which is not part of a sentence
-                window_end = chunk.token_bounds[1] + 2
+                window_end = chunk.token_bounds[1] + 1
             else:
                 # Rightmost token position of ending chunk, +1
-                window_end = self.chunks[chunk_index + window_chunk_offset].token_bounds[1] + 1
+                window_end = self.chunks[chunk_index + window_chunk_offset].token_bounds[1]
 
             # If window exceeds maximum size, truncate to maximum size without sliding
-            if window_end - window_start >= self.max_chunk_size:
+            if window_end - window_start > self.max_chunk_size:
                 if chunk_index != 0:
                     window_start = chunk.token_bounds[0]
-                window_end = min(chunk.token_bounds[1] + 1, window_start + self.max_chunk_size)
+                window_end = min(chunk.token_bounds[1], window_start + self.max_chunk_size)
 
             # input_tokens is sliced in accordance with window_start and window_end above
             batch_inputs = {k: v[:, window_start:window_end] for k, v in self.input_tokens.items()}
@@ -234,10 +234,10 @@ class Searcher:
 
             for i, chunk in enumerate(self.chunks):
                 chunk.embedding = pooled_embeddings[i].detach().cpu().numpy()
-                left_token_idx = 0 if i == 0 else chunk.token_bounds[0]
-                right_token_idx = chunk.token_bounds[1] + (i == len(self.chunks) - 1)
+                token_idx_start = 0 if i == 0 else chunk.token_bounds[0]
+                token_idx_end = chunk.token_bounds[1] + (i == len(self.chunks) - 1)
                 batch = {
-                    k: v[:, left_token_idx:right_token_idx + 1]
+                    k: v[:, token_idx_start:token_idx_end]
                     for k, v in self.input_tokens.items()
                 }
                 chunk.tokens = batch['input_ids']
