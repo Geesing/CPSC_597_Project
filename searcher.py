@@ -55,6 +55,7 @@ class Searcher:
         model (SentenceTransformer): See above.
         max_chunk_size (int): See above.
         reranker (AutoModelForSequenceClassification): See above.
+        window_offset (int): See above.
         input_tokens (BatchEncoding): The entire tokenized input_text.
         tokens_char_bounds (torch.Tensor): A list of beginning and ending char indices for each token, end exclusive.
         chunks: (List[Chunk]): A list of chunks derived from the input_text.
@@ -66,6 +67,7 @@ class Searcher:
         self.model = model
         self.max_chunk_size = max_chunk_size
         self.reranker = reranker
+        self.window_offset = window_offset
         self.chunks = []
 
         # NLProcessor will be used to split sentences
@@ -85,10 +87,10 @@ class Searcher:
 
         self.__chunk_by_sentences()
 
-        if window_offset == 0:
+        if self.window_offset == 0:
             self.__embed_blind()
-        elif window_offset >= 1:
-            self.__embed_sliding(window_offset)
+        elif self.window_offset >= 1:
+            self.__embed_sliding()
         else:
             self.__embed_late()
 
@@ -163,7 +165,7 @@ class Searcher:
     Embeds each chunk on a "sliding" basis; each chunk receives context from n previous and next sentences.
     n is determined by window_chunk_offset.
     """
-    def __embed_sliding(self, window_chunk_offset=0):
+    def __embed_sliding(self):
         for chunk_index, chunk in enumerate(self.chunks):
             # Determine leftmost token position of current window
             if chunk_index == 0:
@@ -172,7 +174,7 @@ class Searcher:
             else:
                 # Leftmost token position of starting chunk
                 window_start = self.chunks[
-                    max(chunk_index - window_chunk_offset, 0)
+                    max(chunk_index - self.window_offset, 0)
                 ].token_bounds[0]
 
             # Determine rightmost token position of current window
@@ -182,7 +184,7 @@ class Searcher:
             else:
                 # Rightmost token position of ending chunk, +1
                 window_end = self.chunks[
-                    min(chunk_index + window_chunk_offset, len(self.chunks) - 1)
+                    min(chunk_index + self.window_offset, len(self.chunks) - 1)
                 ].token_bounds[1]
 
             # If window exceeds maximum size, truncate to maximum size without sliding
