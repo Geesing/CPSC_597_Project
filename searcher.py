@@ -266,7 +266,7 @@ class Searcher:
     Returns:
         (List[SearchResult]) ranked list of search results. Only returns top k if rerank_top_k > 0.
     """
-    def rank_similarity(self, search_term, rerank_top_k=0, query_prefix = ''):
+    def get_ranked_similarities(self, search_term, rerank_top_k=0, query_prefix = ''):
         search_results = []
         search_embedding = self.model.encode(search_term)
 
