@@ -31,11 +31,82 @@ spacy_model.add_pipe('yasbd', first=True, config={'lang': 'auto'})
 class TestSearcher(unittest.TestCase):
 
     # ==========================================
+    # Tests for expected embedding shape
+    # ==========================================
+    def test_embedding_shape_window_offset_0(self):
+        input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man. A cruise in warm waters in a sleek yacht is fun.'
+
+        searcher = Searcher(
+            input_text=input_text,
+            nlp=spacy_model,
+            tokenizer=tokenizer,
+            model=model,
+            max_chunk_size=8192,
+            reranker=reranker,
+            window_offset=0
+        )
+        base_embedding = model.encode('')
+
+        for chunk in searcher.chunks:
+            self.assertEqual(chunk.embedding.shape, base_embedding.shape)
+
+    def test_embedding_shape_window_offset_1(self):
+        input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man. A cruise in warm waters in a sleek yacht is fun.'
+
+        searcher = Searcher(
+            input_text=input_text,
+            nlp=spacy_model,
+            tokenizer=tokenizer,
+            model=model,
+            max_chunk_size=8192,
+            reranker=reranker,
+            window_offset=1
+        )
+        base_embedding = model.encode('')
+
+        for chunk in searcher.chunks:
+            self.assertEqual(chunk.embedding.shape, base_embedding.shape)
+
+    def test_embedding_shape_window_offset_2(self):
+        input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man. A cruise in warm waters in a sleek yacht is fun.'
+
+        searcher = Searcher(
+            input_text=input_text,
+            nlp=spacy_model,
+            tokenizer=tokenizer,
+            model=model,
+            max_chunk_size=8192,
+            reranker=reranker,
+            window_offset=2
+        )
+        base_embedding = model.encode('')
+
+        for chunk in searcher.chunks:
+            self.assertEqual(chunk.embedding.shape, base_embedding.shape)
+
+    def test_embedding_shape_window_offset_neg_1(self):
+        input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man. A cruise in warm waters in a sleek yacht is fun.'
+
+        searcher = Searcher(
+            input_text=input_text,
+            nlp=spacy_model,
+            tokenizer=tokenizer,
+            model=model,
+            max_chunk_size=8192,
+            reranker=reranker,
+            window_offset=-1
+        )
+        base_embedding = model.encode('')
+
+        for chunk in searcher.chunks:
+            self.assertEqual(chunk.embedding.shape, base_embedding.shape)
+
+
+
+    # ==========================================
     # Tests for trivial exact matches
     # ==========================================
     def test_short_exact_similarity_window_offset_0(self):
-        searcher = Searcher
-
         input_text = 'Hi'
 
         search_term = 'Hi'
@@ -49,7 +120,7 @@ class TestSearcher(unittest.TestCase):
             reranker=reranker,
             window_offset=0
         )
-        search_results = searcher.rank_similarity(search_term)
+        search_results = searcher.get_ranked_similarities(search_term)
 
         self.assertEqual(len(search_results), 1)
 
@@ -58,8 +129,6 @@ class TestSearcher(unittest.TestCase):
         )
 
     def test_long_exact_similarity_window_offset_0(self):
-        searcher = Searcher
-
         input_text = 'The quick brown fox jumps over the lazy dog.'
 
         search_term = 'The quick brown fox jumps over the lazy dog.'
@@ -73,7 +142,7 @@ class TestSearcher(unittest.TestCase):
             reranker=reranker,
             window_offset=0
         )
-        search_results = searcher.rank_similarity(search_term)
+        search_results = searcher.get_ranked_similarities(search_term)
 
         self.assertEqual(len(search_results), 1)
 
