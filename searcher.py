@@ -138,7 +138,8 @@ class Searcher:
     """
     def __embed_blind(self):
         self.model.max_seq_length = self.max_chunk_size
-        embeddings = self.model.encode([chunk.text for chunk in self.chunks], max_length=self.max_chunk_size)
+        with torch.inference_mode():
+            embeddings = self.model.encode([chunk.text for chunk in self.chunks], max_length=self.max_chunk_size)
 
         # Store each chunk's associated tokens
         for i, chunk in enumerate(self.chunks):
@@ -197,7 +198,7 @@ class Searcher:
             batch_inputs = {k: v[:, window_start:window_end] for k, v in self.input_tokens.items()}
             chunk.tokens = batch_inputs['input_ids']
             
-            with torch.no_grad():
+            with torch.inference_mode():
                 model_output = self.model(**batch_inputs)
 
             chunk_start = chunk.token_bounds[0]
@@ -218,7 +219,7 @@ class Searcher:
     Not for use on large input texts with token counts beyond the model limits.
     """
     def __embed_late(self):
-        with torch.no_grad():
+        with torch.inference_mode():
             model_output = self.model(**self.input_tokens)
 
         token_embeddings = model_output[0]
