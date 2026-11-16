@@ -1,0 +1,8 @@
+# Large data files
+data/Cross-Language-Dataset
+*.jsonl
+*.pkl
+
+# Local files
+.DS_Store
+__pycache__
