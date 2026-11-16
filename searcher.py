@@ -269,7 +269,8 @@ class Searcher:
     """
     def get_ranked_similarities(self, search_term, rerank_top_k=0, query_prefix = ''):
         search_results = []
-        search_embedding = self.model.encode(search_term)
+        with torch.inference_mode():
+            search_embedding = self.model.encode(search_term)
 
         for chunk in self.chunks:
             cos_sim = self.__cosine_similarity(search_embedding, chunk.embedding)
@@ -287,12 +288,11 @@ class Searcher:
             rerank_scores = self.reranker.compute_score(sentence_pairs, max_length=1024)
 
             # Rebuild search results with new reranked scores
-            search_results =  [
+            reranked_results =  [
                 SearchResult(chunk=search_results[i].chunk, score=score)
                 for i, score in enumerate(rerank_scores)
             ]
 
-            # Rerank search results by new scores
-            return sorted(search_results, key=lambda r: r.score, reverse=True)
+            return reranked_results + search_results[rerank_top_k:]
 
         return search_results
