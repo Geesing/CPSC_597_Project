@@ -10,9 +10,9 @@ from yasbd import register_spacy_component
 
 from searcher import Searcher
 
-tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True, local_files_only=True)
+tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v2-base-es', trust_remote_code=True, local_files_only=True)
 
-model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True, local_files_only=True)
+model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-es', trust_remote_code=True, local_files_only=True)
 model.to('cpu')
 model.eval()
 
@@ -294,7 +294,7 @@ class TestSearcher(unittest.TestCase):
     def test_max_chunk_size_5_window_offset_0(self):
         input_text = 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.'
         sent_1 = 'The quick brown fox jumps over the lazy dog.'
-        sent_2 = 'Pack my box with five dozen liquor jugs.'
+        sent_2 = ' Pack my box with five dozen liquor jugs.'
 
         searcher = Searcher(
             input_text=input_text,
@@ -315,9 +315,9 @@ class TestSearcher(unittest.TestCase):
 
         # Trim filler tokens from first sentence tokens
         with suppress(ValueError):
-            expected_tokens_sent_1.remove(101)
+            expected_tokens_sent_1.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens_sent_1.remove(101)
+            custom_tokens_sent_1.remove(tokenizer.cls_token_id)
 
         self.assertEqual(expected_tokens_sent_1, custom_tokens_sent_1,
                          'Mismatch in tokens between window_offset=0 and raw tokenizer')
@@ -327,7 +327,7 @@ class TestSearcher(unittest.TestCase):
     def test_max_chunk_size_5_window_offset_1(self):
         input_text = 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.'
         sent_1 = 'The quick brown fox jumps over the lazy dog.'
-        sent_2 = 'Pack my box with five dozen liquor jugs.'
+        sent_2 = ' Pack my box with five dozen liquor jugs.'
 
         searcher = Searcher(
             input_text=input_text,
@@ -348,9 +348,9 @@ class TestSearcher(unittest.TestCase):
 
         # Trim filler tokens from first sentence tokens
         with suppress(ValueError):
-            expected_tokens_sent_1.remove(101)
+            expected_tokens_sent_1.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens_sent_1.remove(101)
+            custom_tokens_sent_1.remove(tokenizer.cls_token_id)
 
         self.assertEqual(expected_tokens_sent_1, custom_tokens_sent_1,
                          'Mismatch in tokens between window_offset=1 and raw tokenizer')
@@ -360,7 +360,7 @@ class TestSearcher(unittest.TestCase):
     def test_max_chunk_size_5_window_offset_2(self):
         input_text = 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.'
         sent_1 = 'The quick brown fox jumps over the lazy dog.'
-        sent_2 = 'Pack my box with five dozen liquor jugs.'
+        sent_2 = ' Pack my box with five dozen liquor jugs.'
 
         searcher = Searcher(
             input_text=input_text,
@@ -381,9 +381,9 @@ class TestSearcher(unittest.TestCase):
 
         # Trim filler tokens from first sentence tokens
         with suppress(ValueError):
-            expected_tokens_sent_1.remove(101)
+            expected_tokens_sent_1.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens_sent_1.remove(101)
+            custom_tokens_sent_1.remove(tokenizer.cls_token_id)
             
         self.assertEqual(expected_tokens_sent_1, custom_tokens_sent_1,
                          'Mismatch in tokens between window_offset=2 and raw tokenizer')
@@ -398,7 +398,7 @@ class TestSearcher(unittest.TestCase):
     def test_edge_chunks_window_offset_1(self):
         input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
         first_chunk = 'Sit on the perch and tell the others what to do. Slide the box into that empty space.'
-        last_chunk = 'Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
+        last_chunk = ' Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
 
         searcher = Searcher(
             input_text=input_text,
@@ -418,21 +418,21 @@ class TestSearcher(unittest.TestCase):
 
         # Trim filler tokens
         with suppress(ValueError):
-            expected_tokens_first.remove(101)
+            expected_tokens_first.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            expected_tokens_first.remove(102)
+            expected_tokens_first.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            expected_tokens_last.remove(101)
+            expected_tokens_last.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            expected_tokens_last.remove(102)
+            expected_tokens_last.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            custom_tokens_first.remove(101)
+            custom_tokens_first.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens_first.remove(102)
+            custom_tokens_first.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            custom_tokens_last.remove(101)
+            custom_tokens_last.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens_last.remove(102)
+            custom_tokens_last.remove(tokenizer.sep_token_id)
 
         self.assertEqual(expected_tokens_first, custom_tokens_first,
                          'Mismatch in tokens between window_offset=1 and raw tokenizer')
@@ -442,7 +442,7 @@ class TestSearcher(unittest.TestCase):
     def test_edge_chunks_window_offset_2(self):
         input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
         second_chunk = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire.'
-        penult_chunk = 'Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
+        penult_chunk = ' Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
 
         searcher = Searcher(
             input_text=input_text,
@@ -462,21 +462,21 @@ class TestSearcher(unittest.TestCase):
 
         # Trim filler tokens
         with suppress(ValueError):
-            expected_tokens_second.remove(101)
+            expected_tokens_second.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            expected_tokens_second.remove(102)
+            expected_tokens_second.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            expected_tokens_penult.remove(101)
+            expected_tokens_penult.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            expected_tokens_penult.remove(102)
+            expected_tokens_penult.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            custom_tokens_second.remove(101)
+            custom_tokens_second.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens_second.remove(102)
+            custom_tokens_second.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            custom_tokens_penult.remove(101)
+            custom_tokens_penult.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens_penult.remove(102)
+            custom_tokens_penult.remove(tokenizer.sep_token_id)
             
         self.assertEqual(expected_tokens_second, custom_tokens_second,
                          'Mismatch in tokens between window_offset=2 and raw tokenizer')
@@ -517,7 +517,7 @@ class TestSearcher(unittest.TestCase):
         input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man. A cruise in warm waters in a sleek yacht is fun.'
 
         # Sentences 2 to 4 of input_text (starting from 0)
-        input_excerpt = 'A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
+        input_excerpt = ' A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall.'
 
         expected_tokens = tokenizer(text=input_excerpt, return_tensors='pt')['input_ids'][0].tolist()
         
@@ -536,13 +536,13 @@ class TestSearcher(unittest.TestCase):
 
         # Trim filler tokens
         with suppress(ValueError):
-            expected_tokens.remove(101)
+            expected_tokens.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            expected_tokens.remove(102)
+            expected_tokens.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            custom_tokens.remove(101)
+            custom_tokens.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens.remove(102)
+            custom_tokens.remove(tokenizer.sep_token_id)
 
         self.assertEqual(expected_tokens, custom_tokens,
                          'Mismatch in tokens between window_offset=1 and raw tokenizer')
@@ -551,7 +551,7 @@ class TestSearcher(unittest.TestCase):
         input_text = 'Sit on the perch and tell the others what to do. Slide the box into that empty space. A brown leather bag hung from its strap. Corn cobs can be used to kindle a fire. The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man. A cruise in warm waters in a sleek yacht is fun.'
 
        # Sentences 4 to 8 of input_text (starting from 0)
-        input_excerpt = 'The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man.'
+        input_excerpt = ' The plush chair leaned against the wall. The case was puzzling to the old and wise. The cloud moved in a stately way and was gone. Madam, this is the best brand of corn. Oats are a food eaten by horse and man.'
 
         expected_tokens = tokenizer(text=input_excerpt, return_tensors='pt')['input_ids'][0].tolist()
         
@@ -570,13 +570,13 @@ class TestSearcher(unittest.TestCase):
 
         # Trim filler tokens
         with suppress(ValueError):
-            expected_tokens.remove(101)
+            expected_tokens.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            expected_tokens.remove(102)
+            expected_tokens.remove(tokenizer.sep_token_id)
         with suppress(ValueError):
-            custom_tokens.remove(101)
+            custom_tokens.remove(tokenizer.cls_token_id)
         with suppress(ValueError):
-            custom_tokens.remove(102)
+            custom_tokens.remove(tokenizer.sep_token_id)
 
         self.assertEqual(expected_tokens, custom_tokens,
                             'Mismatch in tokens between window_offset=1 and raw tokenizer')
@@ -599,8 +599,11 @@ class TestSearcher(unittest.TestCase):
 
         empty_token_char_bounds = torch.tensor([[0, 0], [0, 0]])
 
-        # Blank string should be tokenized into start marker 101 and end marker 102
-        self.assertEqual(searcher.input_tokens['input_ids'][0].tolist(), [101, 102])
+        # Blank string should be tokenized into start marker tokenizer.cls_token_id and end marker tokenizer.sep_token_id
+        self.assertEqual(
+            searcher.input_tokens['input_ids'][0].tolist(),
+            [tokenizer.cls_token_id, tokenizer.sep_token_id]
+        )
 
         # Character boundaries for empty text's start and end markers should be (0, 0)
         empty_token_char_bounds = torch.tensor([[0, 0], [0, 0]])
@@ -619,8 +622,11 @@ class TestSearcher(unittest.TestCase):
             window_offset=0
         )
 
-        # Blank string should be tokenized into start marker 101 and end marker 102
-        self.assertEqual(searcher.input_tokens['input_ids'][0].tolist(), [101, 102])
+        # Blank string should be tokenized into start marker tokenizer.cls_token_id and end marker tokenizer.sep_token_id
+        self.assertEqual(
+            searcher.input_tokens['input_ids'][0].tolist(),
+            [tokenizer.cls_token_id, tokenizer.sep_token_id]
+        )
 
         # Character boundaries for empty text's start and end markers should be (0, 0)
         empty_token_char_bounds = torch.tensor([[0, 0], [0, 0]])
