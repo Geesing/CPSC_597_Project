@@ -70,6 +70,9 @@ class Searcher:
         self.window_offset = window_offset
         self.chunks = []
 
+        self.model.eval()
+        self.reranker.eval()
+
         # NLProcessor will be used to split sentences
         if nlp is None:
             register_spacy_component()
@@ -84,6 +87,10 @@ class Searcher:
         )
         # Store the mappings of tokens to character positions
         self.tokens_char_bounds = self.input_tokens.pop('offset_mapping')[0]
+
+        # Move tokens to the model device
+        device = next(self.model.parameters()).device
+        self.input_tokens = {k: v.to(device) for k, v in self.input_tokens.items()}
 
         self.__chunk_by_sentences()
 
