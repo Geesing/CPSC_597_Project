@@ -146,7 +146,10 @@ class Searcher:
     def __embed_blind(self):
         self.model.max_seq_length = self.max_chunk_size
         with torch.inference_mode():
-            embeddings = self.model.encode([chunk.text for chunk in self.chunks], max_length=self.max_chunk_size)
+            embeddings = self.model.encode(
+                [chunk.text for chunk in self.chunks],
+                convert_to_numpy=True
+            )
 
         # Store each chunk's associated tokens
         for i, chunk in enumerate(self.chunks):
