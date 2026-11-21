@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 import numpy as np
 import spacy
 import torch
@@ -106,14 +107,19 @@ class Searcher:
     Initializes self.chunks with each sentence and the sentence's char and token bounds.
     """
     def __chunk_by_sentences(self):
+        # Escape pairwise delimiters that can disrupt parsing
+        delimiters = '()[]{}“”"`'
+        escaper = str.maketrans(delimiters, ' ' * len(delimiters))
+        escaped_input = self.input_text.translate(escaper)
+
         try:
-            nlp_output = self.nlp(self.input_text)
+            nlp_output = self.nlp(escaped_input)
         except:
             # If input_text language cannot be determined, default to Spanish
             self.nlp.remove_pipe('yasbd')
             self.nlp.add_pipe('yasbd', first=True, config={'lang': 'es'})
 
-            nlp_output = self.nlp(self.input_text)
+            nlp_output = self.nlp(escaped_input)
 
             # Switch back to auto-detecting the language
             self.nlp.remove_pipe('yasbd')
@@ -135,7 +141,7 @@ class Searcher:
                 if token_char_start <= sent_end <= token_char_end and token_char_end > token_char_start:
                     ending_token_pos = token_pos
                     self.chunks.append(Chunk(
-                        text=sent.text,
+                        text=self.input_text[sent_start:sent_end],
                         char_bounds=(sent_start, sent_end),
                         token_bounds=(starting_token_pos, ending_token_pos + 1)
                     ))
