@@ -738,6 +738,57 @@ class TestSearcher(unittest.TestCase):
         self.assertEqual(chunks[1].text, '"This is sentence two.')
         self.assertEqual(chunks[2].text, 'This is sentence three.')   
 
+    def test_comillas(self):
+        input_text = 'This is sentence» one. «This is sentence two. This is sentence three.'
+        searcher = Searcher(
+            input_text=input_text,
+            nlp=spacy_model,
+            tokenizer=tokenizer,
+            model=model,
+            max_chunk_size=8192,
+            reranker=reranker,
+            window_offset=0
+        )
+
+        chunks = searcher.chunks
+        self.assertEqual(chunks[0].text, 'This is sentence» one.')
+        self.assertEqual(chunks[1].text, '«This is sentence two.')
+        self.assertEqual(chunks[2].text, 'This is sentence three.')  
+
+    def test_double_quote_straight(self):
+        input_text = 'This is sentence one. "This is sentence two. This is sentence three.'
+        searcher = Searcher(
+            input_text=input_text,
+            nlp=spacy_model,
+            tokenizer=tokenizer,
+            model=model,
+            max_chunk_size=8192,
+            reranker=reranker,
+            window_offset=0
+        )
+
+        chunks = searcher.chunks
+        self.assertEqual(chunks[0].text, 'This is sentence one.')
+        self.assertEqual(chunks[1].text, '"This is sentence two.')
+        self.assertEqual(chunks[2].text, 'This is sentence three.')   
+
+    def test_backtick(self):
+        input_text = 'This is sentence one. `This is sentence two. This is sentence three.'
+        searcher = Searcher(
+            input_text=input_text,
+            nlp=spacy_model,
+            tokenizer=tokenizer,
+            model=model,
+            max_chunk_size=8192,
+            reranker=reranker,
+            window_offset=0
+        )
+
+        chunks = searcher.chunks
+        self.assertEqual(chunks[0].text, 'This is sentence one.')
+        self.assertEqual(chunks[1].text, '`This is sentence two.')
+        self.assertEqual(chunks[2].text, 'This is sentence three.') 
+
 
 if __name__ == '__main__':
     unittest.main()
