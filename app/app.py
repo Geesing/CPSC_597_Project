@@ -94,7 +94,7 @@ def load_file(file):
             doc = '\n'.join(p.text.translate(escaper) for p in docx.paragraphs)
         elif file_type == '.pdf':
             pdf = PdfReader(file)
-            doc = '\n\n'.join(p.extract_text().translate(escaper) for p in pdf.pages)
+            doc = '\n\n'.join(p.extract_text(extraction_mode='layout').translate(escaper) for p in pdf.pages)
 
         return doc
     else:
