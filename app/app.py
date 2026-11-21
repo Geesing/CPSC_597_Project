@@ -1,6 +1,5 @@
 from io import StringIO
 from pathlib import Path
-import re
 
 from docx import Document
 from pypdf import PdfReader
