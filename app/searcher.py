@@ -127,24 +127,33 @@ class Searcher:
 
         sentences = nlp_output.sents
 
+        # Map sentence char boundaries to equivalent token boundaries
         for sent in sentences:
             sent_start = sent.start_char
             sent_end = sent.end_char
 
+            starting_token_pos = None
+            ending_token_pos = None
+
             # Ex) tokens_char_bounds[0] = (char_start, char_end + 1) for token 0
             for token_pos, (token_char_start, token_char_end) in enumerate(self.tokens_char_bounds):
+                if token_char_end <= token_char_start:
+                    continue
+
                 # If starting sent char is within current token's chars:
-                if token_char_start <= sent_start <= token_char_end and token_char_end > token_char_start:
+                if token_char_start <= sent_start < token_char_end:
                     starting_token_pos = token_pos
 
                 # If ending sent char is within current token's chars:
-                if token_char_start <= sent_end <= token_char_end and token_char_end > token_char_start:
+                if token_char_start < sent_end <= token_char_end:
                     ending_token_pos = token_pos
-                    self.chunks.append(Chunk(
-                        text=self.input_text[sent_start:sent_end],
-                        char_bounds=(sent_start, sent_end),
-                        token_bounds=(starting_token_pos, ending_token_pos + 1)
-                    ))
+            
+            if (starting_token_pos is not None and ending_token_pos is not None):
+                self.chunks.append(Chunk(
+                    text=self.input_text[sent_start:sent_end],
+                    char_bounds=(sent_start, sent_end),
+                    token_bounds=(starting_token_pos, ending_token_pos + 1)
+                ))
 
     """
     Naively embeds every chunk independently of any other chunk.
