@@ -108,7 +108,7 @@ class Searcher:
     """
     def __chunk_by_sentences(self):
         # Escape pairwise delimiters that can disrupt parsing
-        delimiters = '()[]{}“”"`'
+        delimiters = '()[]{}“”«»"`'
         escaper = str.maketrans(delimiters, ' ' * len(delimiters))
         escaped_input = self.input_text.translate(escaper)
 
